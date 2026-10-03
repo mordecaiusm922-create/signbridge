@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SignBridge</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f6f4ef; --ink:#1b1f23; --muted:#5b6168; --line:#dcd7cb; --accent:#0f5c5a; --ok:#1d6b3a; --no:#a1261c; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111416; --ink:#eef1f3; --muted:#a3acb4; --line:#2e353b; --accent:#5fc2b8; --ok:#6fd394; --no:#ff8a7d; } }
+  body { margin:0; padding:24px; font:20px/1.4 "Atkinson Hyperlegible", system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  .phase { font-size:14px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); }
+  body[data-phase="receipt"] .phase { color:var(--ok); }
+  .captions { font-size:clamp(26px, 5vw, 40px); font-weight:700; line-height:1.2; margin:8px 0 16px; }
+  .gloss { display:flex; flex-wrap:wrap; gap:8px; }
+  .gloss span { font-size:15px; font-weight:700; letter-spacing:.05em; padding:4px 10px; border-radius:6px; border:1.5px solid var(--line); }
+  #clips { display:flex; gap:12px; overflow-x:auto; margin-top:16px; }
+  video { width:220px; border-radius:12px; }
+</style>
+</head>
+<body>
+<div class="phase" id="phase">SignBridge</div>
+<div class="captions" id="captions" aria-live="polite">Waiting for a response…</div>
+<div class="gloss" id="gloss"></div>
+<div id="clips"></div>
+<script>
+  // MCP Apps view: the host sends the tool result via postMessage (JSON-RPC).
+  const render = (payload) => {
+    const s = payload?.signed ?? payload;
+    if (!s?.captions) return;
+    document.body.dataset.phase = s.phase;
+    document.getElementById('phase').textContent = { intent: 'Understood', preview: 'Please confirm', receipt: 'Done', response: 'SignBridge' }[s.phase] ?? s.phase;
+    document.getElementById('captions').textContent = s.phase === 'preview' && payload.action ? `${payload.action}?` : s.captions;
+    document.getElementById('gloss').replaceChildren(...s.gloss.map((g) => Object.assign(document.createElement('span'), { textContent: g })));
+    document.getElementById('clips').replaceChildren(...s.clips.filter((c) => c.url).map((c) =>
+      Object.assign(document.createElement('video'), { src: c.url, autoplay: true, muted: true, playsInline: true, loop: true, title: c.gloss })));
+  };
+  window.addEventListener('message', (e) => {
+    const m = e.data;
+    if (m?.method === 'ui/notifications/tool-result') render(m.params?.structuredContent);
+  });
+  window.parent?.postMessage({ jsonrpc: '2.0', id: 1, method: 'ui/initialize', params: { appInfo: { name: 'signbridge', version: '0.4.0' }, appCapabilities: {} } }, '*');
+</script>
+</body>
+</html>

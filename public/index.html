@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>SignBridge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <a class="skip" href="#panel">Skip to controls</a>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M9 20c3-7 11-7 14 0M11 13h10" stroke="var(--on-accent)" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>
+      <span>SignBridge</span>
+    </div>
+    <div class="status-pills" role="status" aria-live="polite">
+      <span class="pill" id="pillCam"><i></i>Camera off</span>
+      <span class="pill" id="pillPrivacy"><i class="ok"></i>Video stays on this device</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Camera stage -->
+    <section class="stage-col" aria-label="Camera">
+      <div class="stage" id="stage" data-state="off">
+        <video id="cam" autoplay muted playsinline></video>
+        <canvas id="overlay" aria-hidden="true"></canvas>
+        <div class="stage-empty" id="stageEmpty">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 16a4 4 0 0 1 4-4h20a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4zM34 22l8-5v14l-8-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>
+          <p>Hand and body landmarks are extracted in your browser.<br>Nothing is uploaded except the points.</p>
+          <button class="btn primary" id="startCam">Start camera</button>
+        </div>
+        <div class="rec-badge" aria-hidden="true"><i></i>Signing</div>
+      </div>
+      <div class="rec-row">
+        <button class="btn record" id="rec" disabled aria-describedby="recHint">
+          <span class="dot" aria-hidden="true"></span><span id="recLabel">Hold to sign</span>
+        </button>
+        <p class="hint" id="recHint">Or hold <kbd>Space</kbd>. Release when the sign is finished.</p>
+      </div>
+      <p class="toast" id="camStatus" role="status" aria-live="polite"></p>
+
+      <section class="echo" aria-labelledby="echoTitle">
+        <header class="echo-head">
+          <h2 id="echoTitle">Alexa+ <span class="sim-tag">simulated</span></h2>
+          <span class="muted small" id="echoAgent"></span>
+        </header>
+        <div class="echo-device">
+          <iframe id="echoView" src="/mcp-app.html" title="Alexa+ screen showing the SignBridge MCP App" sandbox="allow-scripts allow-same-origin"></iframe>
+          <div class="echo-bar"><span class="echo-ring" id="echoRing"></span><span id="echoReply">Alexa+ is waiting for a request.</span></div>
+        </div>
+        <details class="trace">
+          <summary>MCP calls <span class="count" id="traceCount">0</span></summary>
+          <ol id="trace"></ol>
+        </details>
+      </section>
+    </section>
+
+    <!-- Controls -->
+    <section class="panel" id="panel" aria-label="Controls">
+      <div class="segmented" role="tablist" aria-label="Mode">
+        <button role="tab" id="tabAsk" aria-selected="true" aria-controls="viewAsk">Ask</button>
+        <button role="tab" id="tabTeach" aria-selected="false" aria-controls="viewTeach">Teach <span class="count" id="vocabCount">0</span></button>
+        <button role="tab" id="tabEval" aria-selected="false" aria-controls="viewEval">Evaluate</button>
+      </div>
+
+      <!-- Teach -->
+      <div class="view" id="viewTeach" role="tabpanel" aria-labelledby="tabTeach" hidden>
+        <h2>Teach a sign</h2>
+        <p class="muted">Record each sign about five times, with small natural variations. SignBridge only recognizes signs it has been taught.</p>
+        <label class="field">
+          <span>Sign label (gloss)</span>
+          <input id="gloss" value="YES" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="chips" id="suggest" aria-label="Suggested signs"></div>
+        <ul class="vocab" id="vocab" aria-label="Taught signs"></ul>
+      </div>
+
+      <!-- Evaluate -->
+      <div class="view" id="viewEval" role="tabpanel" aria-labelledby="tabEval" hidden>
+        <h2>Measure recognition</h2>
+        <p class="muted">Pick what you are about to do, then sign it. Include gestures that are <strong>not</strong> signs (scratching, waving, talking with your hands): the key number is how many would have executed as YES.</p>
+        <div class="chips" id="evalTargets" aria-label="What you will sign"></div>
+        <div class="stats" id="evalStats"></div>
+        <div class="verdict" id="evalVerdict" role="status" aria-live="polite"></div>
+        <div class="table-wrap"><table class="confusion" id="evalTable"></table></div>
+        <p class="muted small" id="evalDistances"></p>
+        <div class="row">
+          <button class="btn ghost" id="evalUndo">Undo last</button>
+          <button class="btn ghost" id="evalReset">Reset</button>
+          <button class="btn primary" id="evalExport">Export CSV</button>
+        </div>
+      </div>
+
+      <!-- Ask -->
+      <div class="view" id="viewAsk" role="tabpanel" aria-labelledby="tabAsk">
+        <h2>Your request</h2>
+        <div class="compose">
+          <div class="tokens" id="tokens" aria-live="polite" aria-label="Recognized signs"><span class="placeholder">Signs you make appear here</span></div>
+          <details class="typed">
+            <summary>Type instead</summary>
+            <input id="typed" placeholder="e.g. RESERVE TABLE FOUR FRIDAY 8pm" autocomplete="off">
+            <p class="muted small">Typed requests are labeled as typed, never as recognized ASL.</p>
+          </details>
+          <div class="row">
+            <button class="btn ghost" id="clear">Clear</button>
+            <button class="btn primary" id="send" disabled>Send to Alexa+</button>
+          </div>
+        </div>
+
+        <article class="confirm-card" id="result" hidden aria-live="assertive">
+          <header>
+            <span class="phase" id="phase"></span>
+          </header>
+          <p class="captions" id="captions"></p>
+          <div class="gloss-line" id="glossOut" aria-label="ASL gloss"></div>
+          <div class="clips" id="clips"></div>
+          <div class="decide" id="confirmBox" hidden>
+            <p class="muted">Sign <strong>YES</strong> or <strong>NO</strong>, or choose:</p>
+            <div class="row">
+              <button class="btn danger" id="no">No, cancel</button>
+              <button class="btn success" id="yes">Yes, do it</button>
+            </div>
+            <div class="timer" aria-hidden="true"><i id="timerBar"></i></div>
+          </div>
+        </article>
+
+        <section class="memory" aria-labelledby="memTitle">
+          <h3 id="memTitle">Remembered</h3>
+          <ol class="timeline" id="history"></ol>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
