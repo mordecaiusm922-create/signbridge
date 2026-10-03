@@ -2,14 +2,15 @@
 
 One entry per real problem hit while building. Format follows the hackathon rules.
 
-## Entry 1 — ASL recognition vendor access
-- **Task attempted:** Get API access to Sign-Speak's ASL recognition/production APIs (`recognizeASL`, `produceASL`) for the hackathon build.
-- **Steps:** Emailed the Sign-Speak team on Sep 11, 2026. Sep 14: the team replied that the independent developer program had a backlog of a couple of months. Sep 30: the CEO replied that API access is focused on enterprise and commercial use cases, with no general developer or free trial tier for hackathon projects, and offered to discuss a possible evaluation if there is a strong fit.
-- **Expected:** A sandbox or evaluation key within the 8-week submission window.
-- **Actual:** No API access during the first ~5 weeks of the window; a possible evaluation is still under discussion.
-- **Severity:** High (blocked the original architecture).
-- **Workaround:** On-device MediaPipe landmarks plus a few-shot DTW recognizer for a bounded vocabulary, behind a provider adapter so a vendor API can be plugged in later.
-- **Suggestion:** Amazon could pre-arrange hackathon sandbox access with accessibility partners (sign language, captioning) and list them on the Resources page, so accessibility projects are not blocked by enterprise-only access.
+## Entry 1 — ASL recognition API access
+- **Task attempted:** Integrate Sign-Speak's ASL recognition and production APIs (`recognizeASL`, `produceASL`) as the recognition backend.
+- **Steps:** Contacted Sign-Speak on Sep 11, 2026. Sep 14: their team kindly replied that the independent developer program had a waitlist of a couple of months. Sep 30: Sign-Speak's co-founder replied personally, explaining that API access currently focuses on enterprise and commercial use cases, with no free or hackathon tier, and offered to learn more about the project to see whether an evaluation could fit. That conversation is ongoing.
+- **Expected:** Sandbox access within the submission window.
+- **Actual:** No API access available during the window so far.
+- **Severity:** High (it changed the original architecture).
+- **Workaround:** On-device MediaPipe landmarks plus a few-shot DTW recognizer for a bounded vocabulary, behind a provider adapter, so a professional API like Sign-Speak's can be plugged in later.
+- **Suggestion:** Amazon could pre-arrange hackathon sandbox access with accessibility partners (sign language, captioning) and list them on the Resources page. Thanks to the Sign-Speak team for taking the time to respond personally.
+
 
 ## Entry 2 — Alexa+ developer access
 - **Task attempted:** Test the MCP server against a real Alexa+ host.
